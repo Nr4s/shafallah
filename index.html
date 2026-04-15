@@ -415,7 +415,7 @@ DEFC['\u0623\u0645\u0627\u0643\u0646']=[{a:'\u0645\u0631\u062d\u0627\u0636',i:'�
 // ==================== STORAGE ====================
 // Primary: localStorage (instant), Secondary: Supabase (sync across devices)
 function sg(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
-function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));supaSync(k,v);}catch(e){}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} if(k.indexOf('NUR_K_')===0||k.indexOf('NUR_C_')===0){supaSync(k,v);}}
 function sd(k){try{localStorage.removeItem(k);}catch(e){}}
 
 // Supabase sync - saves key/value pair to cloud
@@ -953,34 +953,96 @@ function closeMod(id){document.getElementById(id).className='modal-bg';}
 function adminLogin(){var p=document.getElementById('adm-pw').value;var err=document.getElementById('adm-err');if(p===ADMPW){document.getElementById('adm-lw').style.display='none';document.getElementById('adm-c').style.display='block';renderAdmin();}else{err.textContent='\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629';}}
 function adminOut(){document.getElementById('adm-lw').style.display='block';document.getElementById('adm-c').style.display='none';document.getElementById('adm-pw').value='';document.getElementById('adm-err').textContent='';showPg('pg-auth');}
 function renderAdmin(){
-  var U=getU(),ua=Object.entries(U);var ts=ua.reduce(function(s,e){return s+(e[1].sts||[]).length;},0);
-  document.getElementById('adm-stats').innerHTML='<div class="adm-stat"><div class="adm-n">'+ua.length+'</div><div class="adm-l">\u0645\u0633\u062a\u062e\u062f\u0645</div></div><div class="adm-stat"><div class="adm-n">'+ts+'</div><div class="adm-l">\u0637\u0627\u0644\u0628</div></div><div class="adm-stat"><div class="adm-n">'+ua.filter(function(e){return e[1].role==='teacher';}).length+'</div><div class="adm-l">\u0645\u0639\u0644\u0645</div></div><div class="adm-stat"><div class="adm-n">'+ua.filter(function(e){return e[1].role==='parent';}).length+'</div><div class="adm-l">\u0648\u0644\u064a \u0623\u0645\u0631</div></div>';
+  var U=getU(), ua=Object.entries(U);
+  var ts=ua.reduce(function(s,e){return s+(e[1].sts||[]).length;},0);
+
+  // Stats
+  document.getElementById('adm-stats').innerHTML=
+    '<div class="adm-stat"><div class="adm-n">'+ua.length+'</div><div class="adm-l">\u0645\u0633\u062a\u062e\u062f\u0645</div></div>'+
+    '<div class="adm-stat"><div class="adm-n">'+ts+'</div><div class="adm-l">\u0637\u0627\u0644\u0628</div></div>'+
+    '<div class="adm-stat"><div class="adm-n">'+ua.filter(function(e){return e[1].role==='teacher';}).length+'</div><div class="adm-l">\u0645\u0639\u0644\u0645</div></div>'+
+    '<div class="adm-stat"><div class="adm-n">'+ua.filter(function(e){return e[1].role==='parent';}).length+'</div><div class="adm-l">\u0648\u0644\u064a \u0623\u0645\u0631</div></div>';
+
   var rm={teacher:'\u0645\u0639\u0644\u0645',parent:'\u0648\u0644\u064a \u0623\u0645\u0631',therapist:'\u0645\u0639\u0627\u0644\u062c'};
-  document.getElementById('adm-users').innerHTML=ua.map(function(e){var em=e[0];var u=e[1];var sts=u.sts||[];var ut=0,ud=0;sts.forEach(function(st){var lv=st.lv||1;var data=AD[lv]||{};var chk=sg('NUR_K_'+(email||'').replace(/[^a-z0-9]/g,'_')+'_'+st.id)||{};Object.keys(data).forEach(function(d,di){Object.keys(data[d]||{}).forEach(function(n){(data[d][n].goals||[]).forEach(function(_,i){ut++;if(chk['G'+lv+'_'+di+'_'+n+'_'+i])ud++;});});});});var rd=u.ct?new Date(u.ct).toLocaleDateString('ar-SA'):'—';return '<div class="u-card"><div class="u-head"><div class="u-av">'+u.nm.charAt(0)+'</div><div style="flex:1;"><div style="font-size:14px;font-weight:bold;">'+u.nm+'</div><div style="font-size:12px;color:#888;">'+em+'</div><div style="font-size:11px;color:#aaa;">\u062a\u0633\u062c\u064a\u0644: '+rd+'</div></div><span class="u-role">'+(rm[u.role]||u.role)+'</span></div>'+(sts.length?'<div style="font-size:12px;font-weight:bold;color:#888;margin-bottom:6px;">\u0627\u0644\u0637\u0644\u0627\u0628 ('+sts.length+'):</div>'+sts.map(function(st){var lv=st.lv||1;var data=AD[lv]||{};var chk=sg('NUR_K_'+(email||'').replace(/[^a-z0-9]/g,'_')+'_'+st.id)||{};var s2=0,d2=0;Object.keys(data).forEach(function(d,di){Object.keys(data[d]||{}).forEach(function(n){(data[d][n].goals||[]).forEach(function(_,i){s2++;if(chk['G'+lv+'_'+di+'_'+n+'_'+i])d2++;});});});var pct=s2?Math.round(d2/s2*100):0;return '<div class="st-mini"><div class="st-mini-av">'+st.nm.charAt(0)+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:bold;">'+st.nm+'</div><div style="font-size:11px;color:#888;">\u0645\u0633\u062a\u0648\u0649 '+LVN[lv-1]+' '+d2+'/'+s2+'</div><div class="g-mini-bar" style="margin-top:3px;"><div class="g-mini-fill" style="width:'+pct+'%;"></div></div></div><div style="font-size:13px;font-weight:bold;color:var(--p);">'+pct+'%</div></div>';}).join(''):'<div style="font-size:12px;color:#aaa;padding:6px;">\u0644\u0627 \u064a\u0648\u062c\u062f \u0637\u0644\u0627\u0628</div>')+'<div style="font-size:11px;color:#ccc;margin-top:6px;">\u0625\u062c\u0645\u0627\u0644\u064a: '+ud+'/'+ut+'</div></div>';}).join('')||'<div style="text-align:center;color:#aaa;padding:20px;">\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646</div>';
-}
 
-
-function showHome(){
-  // update home page student info
-  if(CS){
-    var av=document.getElementById('hm-av');
-    if(av){
-      if(CS.img){av.style.backgroundImage='url('+CS.img+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent='';}
-      else{av.style.backgroundImage='';av.textContent=CS.nm.charAt(0);}
-    }
-    var nm=document.getElementById('hm-nm');if(nm)nm.textContent=CS.nm;
-    var lv=document.getElementById('hm-lv');if(lv)lv.textContent='VB-MAPP · المستوى '+LVN[(CS.lv||1)-1];
-    // Quick stats
-    var chk=getChk();var lv2=CS.lv||1;var data=AD[lv2]||{};
-    var lvMaps=[{lv:1,data:AD[1],idx:IDX1},{lv:2,data:AD[2],idx:IDX2},{lv:3,data:AD[3],idx:IDX3}];
-    var tot=0,dn=0;
-    lvMaps.forEach(function(ld){Object.keys(ld.data).forEach(function(dom){var di=ld.idx[dom];if(di===undefined||di===99)return;Object.keys(ld.data[dom]||{}).forEach(function(n){(ld.data[dom][n].goals||[]).forEach(function(_,i){tot++;if(chk['G'+ld.lv+'_'+di+'_'+n+'_'+i])dn++;});});});});
-    var pct=tot?Math.round(dn/tot*100):0;
-    var st=document.getElementById('hm-stats');
-    if(st)st.innerHTML='<div style="text-align:center;"><div style="font-size:22px;font-weight:bold;color:var(--p);">'+dn+'</div><div style="font-size:11px;color:#888;">هدف محقق</div></div><div style="text-align:center;"><div style="font-size:22px;font-weight:bold;color:var(--p);">'+pct+'%</div><div style="font-size:11px;color:#888;">الإنجاز</div></div><div style="text-align:center;"><div style="font-size:22px;font-weight:bold;color:var(--p);">'+LVN[(CS.lv||1)-1]+'</div><div style="font-size:11px;color:#888;">المستوى</div></div>';
+  if(!ua.length){
+    document.getElementById('adm-users').innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646</div>';
+    return;
   }
-  showPg('pg-home');
+
+  // Export button
+  document.getElementById('adm-users').innerHTML=
+    '<button onclick="exportCSV()" style="width:100%;padding:10px;margin-bottom:12px;background:#4CAF50;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;">\u062a\u0635\u062f\u064a\u0631 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646 CSV \u2193</button>'+
+    ua.map(function(e){
+      var email=e[0], u=e[1], sts=u.sts||[];
+      var rd=u.ct?new Date(u.ct).toLocaleDateString('ar-SA'):'\u2014';
+
+      // calc total goals per user
+      var ut=0, ud=0;
+      sts.forEach(function(st){
+        var lv=st.lv||1, data=AD[lv]||{}, chk=sg('NUR_K_'+email.replace(/[^a-z0-9]/g,'_')+'_'+st.id)||{};
+        Object.keys(data).forEach(function(d,di){
+          Object.keys(data[d]||{}).forEach(function(n){
+            (data[d][n].goals||[]).forEach(function(_,i){ut++;if(chk['G'+lv+'_'+di+'_'+n+'_'+i])ud++;});
+          });
+        });
+      });
+
+      return '<div class="u-card">'+
+        // Header row
+        '<div class="u-head">'+
+          '<div class="u-av">'+u.nm.charAt(0)+'</div>'+
+          '<div style="flex:1;">'+
+            '<div style="font-size:14px;font-weight:bold;">'+u.nm+'</div>'+
+            '<div style="font-size:12px;color:#9B2D8E;font-weight:bold;">'+email+'</div>'+
+            '<div style="font-size:11px;color:#aaa;">\u062a\u0633\u062c\u064a\u0644: '+rd+' \u00b7 '+(rm[u.role]||u.role)+'</div>'+
+          '</div>'+
+          '<div style="text-align:center;background:#f5f5f5;border-radius:8px;padding:6px 10px;">'+
+            '<div style="font-size:16px;font-weight:bold;color:#9B2D8E;">'+ud+'/'+ut+'</div>'+
+            '<div style="font-size:10px;color:#888;">\u0647\u062f\u0641</div>'+
+          '</div>'+
+        '</div>'+
+        // Students list
+        (sts.length?
+          '<div style="font-size:11px;font-weight:bold;color:#888;margin:8px 0 6px;">\u0627\u0644\u0637\u0644\u0627\u0628 ('+sts.length+'):</div>'+
+          sts.map(function(st){
+            var lv=st.lv||1, data=AD[lv]||{}, chk=sg('NUR_K_'+email.replace(/[^a-z0-9]/g,'_')+'_'+st.id)||{};
+            var s2=0,d2=0;
+            Object.keys(data).forEach(function(d,di){Object.keys(data[d]||{}).forEach(function(n){(data[d][n].goals||[]).forEach(function(_,i){s2++;if(chk['G'+lv+'_'+di+'_'+n+'_'+i])d2++;});});});
+            var pct=s2?Math.round(d2/s2*100):0;
+            return '<div class="st-mini">'+
+              '<div class="st-mini-av">'+st.nm.charAt(0)+'</div>'+
+              '<div style="flex:1;">'+
+                '<div style="font-size:13px;font-weight:bold;">'+st.nm+'</div>'+
+                '<div style="font-size:11px;color:#888;">\u0645\u0633\u062a\u0648\u0649 '+LVN[lv-1]+' \u00b7 '+d2+'/'+s2+' \u0647\u062f\u0641</div>'+
+                '<div class="g-mini-bar" style="margin-top:3px;"><div class="g-mini-fill" style="width:'+pct+'%;"></div></div>'+
+              '</div>'+
+              '<div style="font-size:14px;font-weight:bold;color:var(--p);">'+pct+'%</div>'+
+            '</div>';
+          }).join('')
+        :
+          '<div style="font-size:12px;color:#aaa;padding:6px;">\u0644\u0627 \u064a\u0648\u062c\u062f \u0637\u0644\u0627\u0628 \u0628\u0639\u062f</div>'
+        )+
+      '</div>';
+    }).join('');
 }
+
+function exportCSV(){
+  var U=getU(), ua=Object.entries(U);
+  var rows=['\u0627\u0644\u0628\u0631\u064a\u062f,\u0627\u0644\u0627\u0633\u0645,\u0627\u0644\u062f\u0648\u0631,\u0639\u062f\u062f \u0627\u0644\u0637\u0644\u0627\u0628,\u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0637\u0644\u0627\u0628,\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0633\u062c\u064a\u0644'];
+  ua.forEach(function(e){
+    var email=e[0],u=e[1],sts=u.sts||[];
+    var stNames=sts.map(function(s){return s.nm;}).join(' | ');
+    var rd=u.ct?new Date(u.ct).toLocaleDateString('ar-SA'):'';
+    rows.push([email,u.nm,u.role,sts.length,stNames,rd].join(','));
+  });
+  var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='\u0645\u0633\u062a\u062e\u062f\u0645\u064a_\u0627\u0644\u0634\u0641\u0644\u062d.csv';
+  a.click();
+}
+
 
 // ==================== INIT ====================
 
